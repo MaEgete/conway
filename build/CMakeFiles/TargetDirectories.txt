@@ -1,0 +1,3 @@
+/var/home/megetemeyer/Schreibtisch/conway/build/CMakeFiles/game.dir
+/var/home/megetemeyer/Schreibtisch/conway/build/CMakeFiles/edit_cache.dir
+/var/home/megetemeyer/Schreibtisch/conway/build/CMakeFiles/rebuild_cache.dir
