@@ -1,1 +1,1 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/game.dir/link.d CMakeFiles/game.dir/src/main.cpp.o -o game  -Wl,-rpath,/usr/local/lib64 /usr/local/lib64/libraylib.so.5.5.0 -lm
+/usr/bin/clang++ -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/game.dir/src/main.cpp.o -o game  /usr/local/lib/libraylib.dylib

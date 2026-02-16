@@ -5,7 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdint>
-
+#include <map>
 
 
 void animation_field(std::vector<uint8_t>& field, int step){
@@ -49,6 +49,9 @@ void initialize_field(std::vector<uint8_t>& field, const std::vector<int>& x_vec
 
   if(x_vec.size() != y_vec.size()){
     std::cout << "x_vec and y_vec have not the same size" << std::endl;
+    std::cout << "size of x_vec: " << x_vec.size() << std::endl;
+    std::cout << "size of y_vec: " << y_vec.size() << std::endl;
+
     return;
   }
 
@@ -107,10 +110,74 @@ void printField(std::vector<uint8_t>& field, const int block_size, const size_t 
 }
 
 
+  /*
+    0 | 0 | 0
+    0 | 1 | 0
+    0 | 0 | 0
+
+    Oben:         -y        =>  val - block_count
+    Unten:        +y        =>  val + block_count
+    Links:        -x        =>  val - 1
+    Rechts:       +x        =>  val + 1
+    Links Oben:   -x && -y  =>  val - 1 - block_count
+    Rechts Oben:  +x && -y  =>  val + 1 - block_count
+    Links Unten:  -x && +y  =>  val - 1 + block_count
+    Rechts Unten: +x && +y  =>  val + 1 + block_count
+
+  */
+
+int countNeighbours(int x, int y, const std::vector<uint8_t>& field, int block_count) {
+    int n = 0;
+
+    auto at = [&](int xx, int yy) -> int {
+        if (xx < 0 || xx >= block_count || yy < 0 || yy >= block_count) return 0;
+        return field[yy * block_count + xx] ? 1 : 0;
+    };
+
+    for (int dy = -1; dy <= 1; ++dy) {
+        for (int dx = -1; dx <= 1; ++dx) {
+            if (dx == 0 && dy == 0) continue;
+            n += at(x + dx, y + dy);
+        }
+    }
+
+    return n;
+}
+
+
+
+// Verändert das field, indem die Regeln angewandt werden
+    /*
+        Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+        Any live cell with two or three live neighbours lives on to the next generation.
+        Any live cell with more than three live neighbours dies, as if by overpopulation.
+        Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+    */
+void rules(std::vector<uint8_t>& field, int block_count) {
+    std::vector<uint8_t> next(field.size(), 0);
+
+    for (int y = 0; y < block_count; ++y) {
+        for (int x = 0; x < block_count; ++x) {
+            int i = y * block_count + x;
+            bool alive = field[i] != 0;
+            int neighbours = countNeighbours(x, y, field, block_count);
+
+            if (alive) {
+                next[i] = (neighbours == 2 || neighbours == 3) ? 1 : 0;
+            } else {
+                next[i] = (neighbours == 3) ? 1 : 0;
+            }
+        }
+    }
+
+    field.swap(next);
+
+
+}
+
+
 
 int main(void){
-
-
 
   // Camera2D noch hinzufuegen
 
@@ -135,12 +202,122 @@ int main(void){
 
   //int step = 0;
 
-  int test = block_count-1;
-  std::vector<int> x_vec{0, 1, test};
-  std::vector<int> y_vec{0, 1, test};
+  // Block
+  std::vector<int> x_vec{0, 1, 0, 1};
+  std::vector<int> y_vec{0, 0, 1, 1};
+
+  // Tub
+  x_vec = {2, 1, 3, 2};
+  y_vec = {1, 2, 2, 3};
+
+  // Boat
+  x_vec = {2, 1, 3, 2, 3};
+  y_vec = {1, 2, 2, 3, 3};
+
+  // Snake
+  x_vec = {1, 3, 4, 1, 2, 4};
+  y_vec = {3, 3, 3, 4, 4, 4};
+
+  // Ship
+  x_vec = {2, 3, 2, 4, 3, 4};
+  y_vec = {2, 2, 3, 3, 4, 4};
+
+  // Aircraft carrier
+  x_vec = {1, 2, 1, 4, 3, 4};
+  y_vec = {2, 2, 3, 3, 4, 4};
+
+  // Beehive
+  x_vec = {2, 3, 1, 4, 2, 3};
+  y_vec = {2, 2, 3, 3, 4, 4};
+
+  // Barge
+  x_vec = {2, 1, 3, 2, 4, 3};
+  y_vec = {1, 2, 2, 3, 3, 4};
+
+  // Python
+  x_vec = {4, 5, 1, 3, 5, 1, 2};
+  y_vec = {2, 2, 3, 3, 3, 4, 4};
+
+  // Long Boat
+  x_vec = {3, 2, 4, 3, 5, 4, 5};
+  y_vec = {1, 2, 2, 3, 3, 4 ,4};
+
+  // Eater, Fishhook
+  x_vec = {2, 3, 2, 4, 4, 4, 5};
+  y_vec = {1, 1, 2, 2, 3, 4, 4};
+
+  // Loaf
+  x_vec = {3, 2, 4, 2, 5, 3, 4};
+  y_vec = {1, 2, 2, 3, 3, 4, 4};
+
+
+  // Oszillatoren
+  x_vec = {
+    10, 11, 12, 13, 
+    10, 14, 
+    10, 
+    1, 2, 11, 14, 
+    0, 1, 3, 4, 
+    1, 2, 3, 4, 8, 
+    2, 3, 7, 9, 10, 19, 24, 25, 26, 
+    6, 10, 19, 24, 26, 
+    2, 3, 7, 9, 10, 19, 24, 25, 26, 
+    1, 2, 3, 4, 8, 
+    0, 1, 3, 4, 
+    1, 2, 11, 14, 
+    10, 
+    10, 14, 
+    10, 11, 12, 13
+  };
+
+  y_vec = {
+    0, 0, 0, 0, 
+    1, 1, 
+    2, 
+    3, 3, 3, 3, 
+    4, 4, 4, 4, 
+    5, 5, 5, 5, 5, 
+    6, 6, 6, 6, 6, 6, 6, 6, 6, 
+    7, 7, 7, 7, 7, 
+    8, 8, 8, 8, 8, 8, 8, 8, 8,
+    9, 9, 9, 9, 9, 
+    10, 10, 10, 10, 
+    11, 11, 11, 11, 
+    12, 
+    13, 13, 
+    14, 14, 14, 14
+  };
+
+
+  // Clock 2, period 4
+  x_vec = {
+    6, 7, 
+    6, 7, 
+    4, 5, 6, 7, 
+    0, 1, 3, 8, 
+    0, 1, 3, 5, 6, 8, 
+    3, 7, 8, 10, 11, 
+    3, 8, 10, 11, 
+    4, 5, 6, 7, 
+    4, 5, 4, 5
+  };
+
+  y_vec = {
+    0, 0, 
+    1, 1, 
+    3, 3, 3, 3, 
+    4, 4, 4, 4, 
+    5, 5, 5, 5, 5, 5, 
+    6, 6, 6, 6, 6, 
+    7, 7, 7, 7, 
+    8, 8, 8, 8, 
+    10, 10, 
+    11, 11
+  };
 
   initialize_field(field, x_vec, y_vec, block_count);
-  
+
+  SetTargetFPS(10);
 
   while(!WindowShouldClose()){
 
@@ -150,7 +327,10 @@ int main(void){
 
       // animation_field(field, step++);
 
+      // Erst printen, dann verändern
       printField(field, block_size, block_count);
+
+      rules(field, block_count);
 
     EndDrawing();
 
