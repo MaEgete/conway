@@ -1,11 +1,11 @@
 #include "raylib.h"
 #include <cstddef>
 #include <cstdio>
-#include <filesystem>
+#include <fstream>
 #include <vector>
 #include <iostream>
 #include <cstdint>
-#include <map>
+#include <string>
 
 
 void animation_field(std::vector<uint8_t>& field, int step){
@@ -175,6 +175,56 @@ void rules(std::vector<uint8_t>& field, int block_count) {
 
 }
 
+std::string field_to_string(const std::vector<uint8_t>& field, int block_count){
+
+  std::string values;
+
+  int blocks = 1;
+  for(const auto& val : field){
+    values += std::to_string(val);
+
+    if(blocks >= field.size()){
+      break;
+    }
+
+    if(blocks % block_count == 0){
+      values += "\n";
+    }
+
+    blocks++;
+  }
+
+  return values;
+}
+
+// returns -1 when failing, otherwise 0
+int save(const std::string& filename, const std::vector<uint8_t>& field, int block_count){
+
+  std::cout << filename << " wird gespeichert ..." << std::endl;
+
+  std::ofstream file{filename};
+
+  if(!file.is_open()){
+    std::cout << "File could not be opened" << std::endl;
+    return -1;
+  }
+
+  file << field_to_string(field, block_count);
+
+  std::cout << filename << " wurde erfolgreich gespeichert!" << std::endl;
+
+  file.close();
+
+  return 0;
+
+}
+
+
+int load_field_from_save(){
+
+}
+
+
 
 
 int main(void){
@@ -290,6 +340,7 @@ int main(void){
 
 
   // Clock 2, period 4
+  
   x_vec = {
     6, 7, 
     6, 7, 
@@ -314,6 +365,7 @@ int main(void){
     10, 10, 
     11, 11
   };
+  
 
   initialize_field(field, x_vec, y_vec, block_count);
 
@@ -339,6 +391,10 @@ int main(void){
   CloseWindow();
 
   std::cout << std::endl;
+
+  if(save("field_save.txt", field, block_count) == -1){
+    return -1;
+  }
 
   return 0;
   
