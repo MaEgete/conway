@@ -57,7 +57,6 @@ field_save.txt
 ## On startup:
 
 - If the file exists → you are asked whether to load it.
-
 - Otherwise → a predefined pattern is initialized.
 
 The save format is plain text:
@@ -73,25 +72,15 @@ The save format is plain text:
 The code contains several predefined patterns, including:
 
 - Tub
-
 - Boat
-
 - Snake
-
 - Ship
-
 - Aircraft Carrier
-
 - Beehive
-
 - Barge
-
 - Python
-
 - Long Boat
-
 - Loaf
-
 - Oscillators
 
 You can switch between patterns by modifying the x_vec and y_vec vectors in main().
@@ -100,9 +89,7 @@ You can switch between patterns by modifying the x_vec and y_vec vectors in main
 ## Requirements
 
 - C++17 or newer
-
 - raylib installed
-
 - CMake (recommended)
 
 
@@ -123,26 +110,18 @@ Then run:
 ## Controls
 
 - Close window → exit simulation
-
 - On exit → field automatically saved
 
 
 ## Possible Improvements
 
 - Mouse interaction (draw cells manually)
-
 - Pause / Resume
-
 - Adjustable simulation speed
-
 - Camera2D support
-
 - Infinite grid / wrapping edges
-
 - Pattern loader (.rle format)
-
 - Multithreading
-
 - GPU acceleration
 
 
@@ -151,13 +130,9 @@ Then run:
 This project is a learning project for:
 
 - 2D graphics with raylib
-
 - memory-efficient grid handling
-
 - simulation design
-
 - file I/O in C++
-
 - rule-based systems
 
 ## License
