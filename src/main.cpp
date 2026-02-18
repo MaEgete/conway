@@ -220,7 +220,36 @@ int save(const std::string& filename, const std::vector<uint8_t>& field, int blo
 }
 
 
-int load_field_from_save(){
+std::vector<uint8_t> load_field_from_save(std::string filename, int block_count){
+
+  // Field erstellen
+  std::vector<uint8_t> field(block_count * block_count, 0);
+
+  std::ifstream file(filename);
+
+  if(!file.is_open()){
+    std::cout << filename << " could not be opended!" << std::endl;
+    return field;
+  }
+
+  std::string line;
+
+  // Field aus dem Save in den vector field laden
+  int idx = 0;
+  while(std::getline(file, line)){
+    //std::cout << line << std::endl;
+
+    for(char c : line){
+      if(c == '1'){
+        field[idx] = 1;
+      }
+      idx++;
+    }
+  }
+
+  file.close();
+
+  return field;
 
 }
 
@@ -243,16 +272,12 @@ int main(void){
   // Anzahl an Blocken pro Zeile bzw Spalte. Das Feld ist quadratisch!!!, aber dennoch Eindimensional
   const size_t block_count = GetScreenWidth() / block_size;
 
-  // Quadratisches Feld -> [y][x]
-  // Beinhaltet nur 8 Bit Integer Werte:
-  //   0 = block ist schwarz
-  //   1 = block ist weiss
-  std::vector<uint8_t> field(block_count * block_count, 0);
 
+  std::string filename = "field_save.txt";
 
-  //int step = 0;
+  std::vector<uint8_t> field;
 
-  // Block
+  // Koordinaten fuer Initialisierungsbloecke
   std::vector<int> x_vec{0, 1, 0, 1};
   std::vector<int> y_vec{0, 0, 1, 1};
 
@@ -340,7 +365,7 @@ int main(void){
 
 
   // Clock 2, period 4
-  
+  /*
   x_vec = {
     6, 7, 
     6, 7, 
@@ -365,9 +390,53 @@ int main(void){
     10, 10, 
     11, 11
   };
+  */
+
+
+
+  std::ifstream file(filename);
+
+  if(file.is_open()){
+
+    file.close();
+
+    do{
+      std::cout << "Do you want to load from save? [y][n] ";
+
+      char c;
+      std::cin >> c;
+
+     
+      if(c == 'y'){
+        field = load_field_from_save(filename, block_count);
+        break;
+      }
+
+      if(c == 'n'){
+        // Lineares Feld
+        // Beinhaltet nur 8 Bit Integer Werte:
+        //   0 = block ist schwarz
+        //   1 = block ist weiss
+        field.assign(block_count * block_count, 0);
+
+        initialize_field(field, x_vec, y_vec, block_count);
+
+        break;
+      }
+
+      std::cout << "\n Please insert [y]es or [n]o \n\n";
+
+
+    }while(true);
+
+  }
   
 
-  initialize_field(field, x_vec, y_vec, block_count);
+
+
+
+  //int step = 0;
+
 
   SetTargetFPS(10);
 
@@ -392,7 +461,7 @@ int main(void){
 
   std::cout << std::endl;
 
-  if(save("field_save.txt", field, block_count) == -1){
+  if(save(filename, field, block_count) == -1){
     return -1;
   }
 
