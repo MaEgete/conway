@@ -392,12 +392,12 @@ int main(void){
   };
   */
 
-
+  bool load = false;
 
   std::ifstream file(filename);
-
   if(file.is_open()){
 
+  std::cout << "test" << std::endl;
     file.close();
 
     do{
@@ -408,19 +408,13 @@ int main(void){
 
      
       if(c == 'y'){
+        load = true;
         field = load_field_from_save(filename, block_count);
         break;
       }
 
       if(c == 'n'){
-        // Lineares Feld
-        // Beinhaltet nur 8 Bit Integer Werte:
-        //   0 = block ist schwarz
-        //   1 = block ist weiss
-        field.assign(block_count * block_count, 0);
-
-        initialize_field(field, x_vec, y_vec, block_count);
-
+        load = false;
         break;
       }
 
@@ -431,8 +425,16 @@ int main(void){
 
   }
   
+  if(!load){
+    // Lineares Feld
+    // Beinhaltet nur 8 Bit Integer Werte:
+    //   0 = block ist schwarz
+    //   1 = block ist weiss
+    field.assign(block_count * block_count, 0);
 
+    initialize_field(field, x_vec, y_vec, block_count);
 
+  }
 
 
   //int step = 0;
