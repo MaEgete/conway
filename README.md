@@ -6,7 +6,7 @@ The simulation renders a square grid where each cell evolves according to Conway
 
 ---
 
-## 📸 Preview
+## Preview
 
 - Window size: 1200x1200
 - Block size: 10px
@@ -18,7 +18,7 @@ Each cell:
 
 ---
 
-## 🧠 Rules of the Game
+## Rules of the Game
 
 For every generation:
 
@@ -29,7 +29,7 @@ For every generation:
 
 ---
 
-## 🏗 Internal Representation
+## Internal Representation
 
 The grid is stored as a **1D `std::vector<uint8_t>`**, even though it represents a 2D field.
 
@@ -37,7 +37,7 @@ Index mapping:
 
 ```cpp
 index = y * block_count + x;
-
+```
 
 This ensures:
 
@@ -47,28 +47,28 @@ This ensures:
 
 
 
-💾 Save & Load System
+## Save & Load System
 
 The program automatically saves the current state to:
-
+```
 field_save.txt
+```
 
-
-On startup:
+## On startup:
 
 - If the file exists → you are asked whether to load it.
 
 - Otherwise → a predefined pattern is initialized.
 
 The save format is plain text:
-
+```
 0010100
 0001110
-...
+```
 
 
 
-🧩 Built-in Patterns
+## Built-in Patterns
 
 The code contains several predefined patterns, including:
 
@@ -97,7 +97,7 @@ The code contains several predefined patterns, including:
 You can switch between patterns by modifying the x_vec and y_vec vectors in main().
 
 
-🖥 Requirements
+## Requirements
 
 - C++17 or newer
 
@@ -107,26 +107,27 @@ You can switch between patterns by modifying the x_vec and y_vec vectors in main
 
 
 
-🔧 Build (CMake Example)
-
+## Build (CMake Example)
+```
 mkdir build
 cd build
 cmake ..
 cmake --build .
-
+```
 
 Then run:
-
+```
 ./your_executable_name
+```
 
-🎮 Controls
+## Controls
 
 - Close window → exit simulation
 
 - On exit → field automatically saved
 
 
-🚀 Possible Improvements
+## Possible Improvements
 
 - Mouse interaction (draw cells manually)
 
@@ -145,7 +146,7 @@ Then run:
 - GPU acceleration
 
 
-📚 About
+## About
 
 This project is a learning project for:
 
@@ -159,6 +160,6 @@ This project is a learning project for:
 
 - rule-based systems
 
-📜 License
+## License
 
 - Free to use and modify.
