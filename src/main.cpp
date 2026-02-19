@@ -6,6 +6,7 @@
 #include <iostream>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 
 void animation_field(std::vector<uint8_t>& field, int step){
@@ -220,6 +221,7 @@ int save(const std::string& filename, const std::vector<uint8_t>& field, int blo
 }
 
 
+// Gibt das Feld zurueck
 std::vector<uint8_t> load_field_from_save(std::string filename, int block_count){
 
   // Field erstellen
@@ -254,6 +256,59 @@ std::vector<uint8_t> load_field_from_save(std::string filename, int block_count)
 }
 
 
+// Nur in BeginDrawing() in der GameLoop aufrufen
+//
+// Gibt Positionselemente der Buton Yes und No zurueck
+std::pair<std::vector<int>, std::vector<int>> startScreen(){
+
+  int titlerec_x_pos = GetScreenWidth() / 2 - (GetScreenWidth() / 2) / 2;
+  int titlerec_y_pos = (GetScreenHeight() / 2) - (GetScreenHeight() / 10) / 2 ;
+
+  int titlerec_width = GetScreenWidth() / 2;
+  
+  int titlerec_height = GetScreenHeight() / 10;
+
+
+  int title_x_pos = titlerec_x_pos + titlerec_width / 10;
+  int title_y_pos = titlerec_y_pos + titlerec_height / 10;
+
+  titlerec_height = 70;
+
+  // Title
+  DrawRectangle(titlerec_x_pos, titlerec_y_pos, titlerec_width, titlerec_height, RED);
+  DrawText("Conway's Game of Life", title_x_pos, title_y_pos, 43, WHITE);
+
+  int diff = titlerec_height + 40;
+
+  DrawRectangle(titlerec_x_pos, titlerec_y_pos + diff, titlerec_width, titlerec_height, DARKGREEN);
+  DrawText("Load Game? yes / no", title_x_pos, title_y_pos + diff, 43, WHITE);
+
+  diff = diff + titlerec_height + 20;
+
+  // Yes
+  DrawRectangle(titlerec_x_pos, titlerec_y_pos + diff, titlerec_width / 2 - 20, titlerec_height, DARKGREEN);
+  DrawText("Yes", title_x_pos, title_y_pos + diff, 43, WHITE);
+
+  // Yes Koordinaten
+  std::vector<int> v1{titlerec_x_pos, titlerec_y_pos + diff, titlerec_width / 2 - 20, titlerec_height};
+
+  // NO
+  DrawRectangle(titlerec_x_pos + (titlerec_width / 2) + 20, titlerec_y_pos + diff, titlerec_width / 2 - 20, titlerec_height, DARKGREEN);
+  DrawText("No", GetScreenWidth() - title_x_pos - 40, title_y_pos + diff, 43, WHITE);
+
+  std::vector<int> v2{titlerec_x_pos + (titlerec_width / 2) + 20, titlerec_y_pos + diff, titlerec_width / 2 - 20, titlerec_height};
+
+  return {v1,v2};
+
+}
+
+
+enum class GameState{
+  StartScreen,
+  Running
+};
+
+GameState state = GameState::StartScreen;
 
 
 int main(void){
@@ -276,6 +331,8 @@ int main(void){
   std::string filename = "field_save.txt";
 
   std::vector<uint8_t> field;
+
+
 
   // Koordinaten fuer Initialisierungsbloecke
   std::vector<int> x_vec{0, 1, 0, 1};
@@ -392,49 +449,6 @@ int main(void){
   };
   */
 
-  bool load = false;
-
-  std::ifstream file(filename);
-  if(file.is_open()){
-
-  std::cout << "test" << std::endl;
-    file.close();
-
-    do{
-      std::cout << "Do you want to load from save? [y][n] ";
-
-      char c;
-      std::cin >> c;
-
-     
-      if(c == 'y'){
-        load = true;
-        field = load_field_from_save(filename, block_count);
-        break;
-      }
-
-      if(c == 'n'){
-        load = false;
-        break;
-      }
-
-      std::cout << "\n Please insert [y]es or [n]o \n\n";
-
-
-    }while(true);
-
-  }
-  
-  if(!load){
-    // Lineares Feld
-    // Beinhaltet nur 8 Bit Integer Werte:
-    //   0 = block ist schwarz
-    //   1 = block ist weiss
-    field.assign(block_count * block_count, 0);
-
-    initialize_field(field, x_vec, y_vec, block_count);
-
-  }
 
 
   //int step = 0;
@@ -448,12 +462,47 @@ int main(void){
 
     ClearBackground(BLACK);
 
-      // animation_field(field, step++);
+      // Initialisierung
+      
+      if(state == GameState::StartScreen){
+        
+        auto [yes_button, no_button] = startScreen();
 
-      // Erst printen, dann verändern
-      printField(field, block_size, block_count);
+        Rectangle yesRec{(float)yes_button[0], (float)yes_button[1], (float)yes_button[2], (float)yes_button[3]};
 
-      rules(field, block_count);
+        Rectangle noRec{(float)no_button[0], (float)no_button[1], (float)no_button[2], (float)no_button[3]};
+
+        if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+          Vector2 mouse = GetMousePosition();
+
+
+          // Wenn Yes geklickt -> laden
+          if(CheckCollisionPointRec(mouse, yesRec)){
+            field = load_field_from_save(filename, block_count);
+            state = GameState::Running;
+          }
+
+          // Wenn No geklickt -> neu starten
+          else if(CheckCollisionPointRec(mouse, noRec)){
+            field.assign(block_count * block_count, 0);
+
+            initialize_field(field, x_vec, y_vec, block_count);\
+
+            // Hier die moeglichkeit bieten das Feld mit der Maus zu zeichnen / initialisieren
+          
+            state = GameState::Running;
+          }
+        }
+
+      }
+      else{
+      //loading(field, filename, block_count);
+
+        // Erst printen, dann verändern
+        printField(field, block_size, block_count);
+
+        rules(field, block_count);
+      }
 
     EndDrawing();
 
