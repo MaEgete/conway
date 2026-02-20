@@ -2,11 +2,23 @@
 #include <cstddef>
 #include <cstdio>
 #include <fstream>
+#include <iterator>
 #include <vector>
 #include <iostream>
 #include <cstdint>
 #include <string>
 #include <utility>
+#include <algorithm>
+
+
+enum class GameState{
+  StartScreen,
+  DrawScreen,
+  Running
+};
+
+GameState state = GameState::StartScreen;
+
 
 
 void animation_field(std::vector<uint8_t>& field, int step){
@@ -56,6 +68,7 @@ void initialize_field(std::vector<uint8_t>& field, const std::vector<int>& x_vec
     return;
   }
 
+  std::cout << "Bloecke setzen" << std::endl;
   // Alle Bloecke setzen
   for(int i = 0; i < x_vec.size(); i++){
 
@@ -302,13 +315,74 @@ std::pair<std::vector<int>, std::vector<int>> startScreen(){
 
 }
 
+std::pair<std::vector<int>, std::vector<int>> drawField(std::vector<uint8_t>& field, int block_size){
 
-enum class GameState{
-  StartScreen,
-  Running
-};
+  static std::vector<int> x_vec;
+  static std::vector<int> y_vec;
 
-GameState state = GameState::StartScreen;
+  if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
+
+    std::cout << "Left Mouse Button" << std::endl;
+
+    Vector2 mouse = GetMousePosition();
+
+    // Mithilfe der Mouse Position den Block ermitteln auf den geklickt wurde
+  
+    int x_block_koordinate = mouse.x / block_size;
+    int y_block_koordinate = mouse.y / block_size;
+
+    x_vec.emplace_back(x_block_koordinate);
+    y_vec.emplace_back(y_block_koordinate);
+
+
+    return {x_vec, y_vec};
+
+  }
+  // Wenn Rechtsklick, dann wird Block wieder schwarz
+  else if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
+
+    // Wenn in beiden Vectoren an derselben Position, die x und y position gefunden wird, dann werden beide Eintraege mit an der Position geloescht
+
+    Vector2 mouse = GetMousePosition();
+
+    int x_block_koordinate = mouse.x / block_size;
+    int y_block_koordinate = mouse.y / block_size;
+
+
+    for(size_t i = 0; i < x_vec.size(); i++){
+
+      if(x_vec[i] == x_block_koordinate){
+
+        if(y_vec[i] == y_block_koordinate){
+
+          // Kein break, da alle duplikate auch geloescht werden
+          std::cout << "Block gefunden" << std::endl;
+
+          x_vec.erase(x_vec.begin() + i);
+          y_vec.erase(y_vec.begin() + i);
+
+        }
+
+      }
+
+    }
+
+
+    return {x_vec, y_vec};
+    
+  }
+  else if(IsMouseButtonPressed(MOUSE_MIDDLE_BUTTON)){
+    state = GameState::Running;
+
+    return {x_vec, y_vec};
+  }
+
+
+  return {x_vec, y_vec};
+  
+}
+
+
 
 
 int main(void){
@@ -482,17 +556,27 @@ int main(void){
             state = GameState::Running;
           }
 
-          // Wenn No geklickt -> neu starten
+          // Wenn No geklickt -> Feld zeichnen und neu starten
           else if(CheckCollisionPointRec(mouse, noRec)){
             field.assign(block_count * block_count, 0);
-
-            initialize_field(field, x_vec, y_vec, block_count);\
-
-            // Hier die moeglichkeit bieten das Feld mit der Maus zu zeichnen / initialisieren
           
-            state = GameState::Running;
+            state = GameState::DrawScreen;
           }
         }
+
+      }
+      else if(state == GameState::DrawScreen){
+            // drawField soll zwei vectoren x_vec und y_vec zurueckgeben, welche dann in die Methode initialize_field uebergeben werden
+      
+            // Wenn Mausrad gedrueckt wird, dann GameState::Running
+            auto [x_vec, y_vec] = drawField(field, block_size);
+
+
+            field.assign(block_count * block_count, 0);
+
+            initialize_field(field, x_vec, y_vec, block_count);
+
+            printField(field, block_size, block_count);
 
       }
       else{
@@ -502,6 +586,9 @@ int main(void){
         printField(field, block_size, block_count);
 
         rules(field, block_count);
+
+        // Noch ein Ende Schriftzug, wenn sich nichts mehr im Feld tut, bzw. es leer ist
+
       }
 
     EndDrawing();
