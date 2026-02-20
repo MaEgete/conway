@@ -87,15 +87,54 @@ void initialize_field(std::vector<uint8_t>& field, const std::vector<int>& x_vec
 
 }
 
+/*
+enum class Rainbow{
+  PURPLE,
+  BLUE,
+  GREEN,
+  YELLOW,
+  ORANGE,
+  RED
+};
+*/
 
-void printBlock(int x, int y, int block_size, uint8_t val){
+void printBlock(int x, int y, int block_size, uint8_t val, bool rainbow, int idx){
+
+  if(rainbow){
+
+    switch(idx){
+      case 1:
+        DrawRectangle(x, y, block_size, block_size, (val ? PURPLE : BLACK));
+        break;
+      case 2:
+        DrawRectangle(x, y, block_size, block_size, (val ? BLUE : BLACK));
+        break;
+      case 3:
+        DrawRectangle(x, y, block_size, block_size, (val ? GREEN : BLACK));
+        break;
+      case 4:
+        DrawRectangle(x, y, block_size, block_size, (val ? YELLOW : BLACK));
+        break;
+      case 5:
+        DrawRectangle(x, y, block_size, block_size, (val ? ORANGE : BLACK));
+        break;
+      case 6:
+        DrawRectangle(x, y, block_size, block_size, (val ? RED : BLACK));
+        break;
+      default:
+
+        break;
+    }
+
+    return;
+  }
 
   // Wenn val == 1, dann WHITE, ansonsten BLACK
   DrawRectangle(x, y, block_size, block_size, (val ? WHITE : BLACK));
 
 }
 
-void printField(std::vector<uint8_t>& field, const int block_size, const size_t block_count){
+void printField(std::vector<uint8_t>& field, const int block_size, const size_t block_count, bool rainbow = false){
 
   auto at = [&](size_t x, size_t y) -> uint8_t& {
     return field[y * block_count + x];
@@ -103,7 +142,7 @@ void printField(std::vector<uint8_t>& field, const int block_size, const size_t 
 
 
   // Konsolen Test Ausgabe:
-  
+  static int idx = 1;
   for(int i = 0; i < field.size(); i++){
     int y = i / block_count;
     int x = i % block_count;
@@ -117,8 +156,12 @@ void printField(std::vector<uint8_t>& field, const int block_size, const size_t 
     // std::cout << static_cast<int>(at(x, y)) << " ";
 
     // Block an der Richtigen Stelle ausgeben
-    printBlock(x * block_size, y * block_size, block_size, at(x,y));
+    printBlock(x * block_size, y * block_size, block_size, at(x,y), rainbow, idx);
     
+  }
+  idx++;
+  if(idx % 7 == 0){
+      idx = 1;
   }
 
 }
@@ -578,10 +621,10 @@ int main(void){
 
       }
       else{
-      //loading(field, filename, block_count);
 
         // Erst printen, dann verändern
-        printField(field, block_size, block_count);
+        // Nach jedem Print soll eine andere Farbe der Bloecke angezeigt werden, wie ein Regenbogen
+        printField(field, block_size, block_count, true);
 
         rules(field, block_count);
 
