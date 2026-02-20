@@ -407,10 +407,10 @@ int main(void){
   std::vector<uint8_t> field;
 
 
-
+  /* DEPRECATED
   // Koordinaten fuer Initialisierungsbloecke
-  std::vector<int> x_vec{0, 1, 0, 1};
-  std::vector<int> y_vec{0, 0, 1, 1};
+  std::vector<int> x_vec;
+  std::vector<int> y_vec;
 
   // Tub
   x_vec = {2, 1, 3, 2};
@@ -496,7 +496,6 @@ int main(void){
 
 
   // Clock 2, period 4
-  /*
   x_vec = {
     6, 7, 
     6, 7, 
@@ -521,14 +520,13 @@ int main(void){
     10, 10, 
     11, 11
   };
+
   */
-
-
 
   //int step = 0;
 
 
-  SetTargetFPS(10);
+  SetTargetFPS(30);
 
   while(!WindowShouldClose()){
 
