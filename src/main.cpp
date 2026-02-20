@@ -14,11 +14,15 @@
 enum class GameState{
   StartScreen,
   DrawScreen,
-  Running
+  Running,
+  End,
+  Settings
 };
 
 GameState state = GameState::StartScreen;
 
+
+bool redraw = false;
 
 
 void animation_field(std::vector<uint8_t>& field, int step){
@@ -229,6 +233,11 @@ void rules(std::vector<uint8_t>& field, int block_count) {
 
     field.swap(next);
 
+    if(IsKeyPressed(KEY_SPACE)){
+      // Zu Settings wechseln
+      state = GameState::Settings;
+    }
+
 
 }
 
@@ -312,6 +321,7 @@ std::vector<uint8_t> load_field_from_save(std::string filename, int block_count)
 }
 
 
+
 // Nur in BeginDrawing() in der GameLoop aufrufen
 //
 // Gibt Positionselemente der Buton Yes und No zurueck
@@ -362,6 +372,13 @@ std::pair<std::vector<int>, std::vector<int>> drawField(std::vector<uint8_t>& fi
 
   static std::vector<int> x_vec;
   static std::vector<int> y_vec;
+
+  if(redraw){
+    x_vec.clear();
+    y_vec.clear();
+    redraw = false;
+  }
+
 
   if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
 
@@ -421,10 +438,67 @@ std::pair<std::vector<int>, std::vector<int>> drawField(std::vector<uint8_t>& fi
   }
 
 
+
   return {x_vec, y_vec};
   
 }
 
+void printSettings(){
+
+  int titlerec_x_pos = GetScreenWidth() / 2 - (GetScreenWidth() / 2) / 2;
+  int titlerec_y_pos = (GetScreenHeight() / 2) - (GetScreenHeight() / 10) / 2 ;
+
+  int titlerec_width = GetScreenWidth() / 2;
+  
+  int titlerec_height = GetScreenHeight() / 10;
+
+
+  int title_x_pos = titlerec_x_pos + titlerec_width / 10;
+  int title_y_pos = titlerec_y_pos + titlerec_height / 10;
+
+  titlerec_height = 70;
+
+  // Title
+  DrawRectangle(titlerec_x_pos, titlerec_y_pos, titlerec_width, titlerec_height, RED);
+  DrawText("Settings", title_x_pos, title_y_pos, 43, WHITE);
+
+  int diff = titlerec_height + 40;
+  // Exit
+  DrawRectangle(titlerec_x_pos, titlerec_y_pos + diff, titlerec_width / 2 - 20, titlerec_height, DARKGREEN);
+  DrawText("Draw new", title_x_pos, title_y_pos + diff, 43, WHITE);
+
+  // Draw new Koordinaten
+  std::vector<int> v1{titlerec_x_pos, titlerec_y_pos + diff, titlerec_width / 2 - 20, titlerec_height};
+  Rectangle r1{(float)v1[0], (float)v1[1], (float)v1[2], (float)v1[3]};
+
+  // Exit
+  DrawRectangle(titlerec_x_pos + (titlerec_width / 2) + 20, titlerec_y_pos + diff, titlerec_width / 2 - 20, titlerec_height, DARKGREEN);
+  DrawText("Exit", GetScreenWidth() - title_x_pos - 40, title_y_pos + diff, 43, WHITE);
+
+  // Exit Koordinaten
+  std::vector<int> v2{titlerec_x_pos + (titlerec_width / 2) + 20, titlerec_y_pos + diff, titlerec_width / 2 - 20, titlerec_height};
+  Rectangle r2{(float)v2[0], (float)v2[1], (float)v2[2], (float)v2[3]};
+
+  if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+
+    // Draw new
+    Vector2 mouse = GetMousePosition();
+    if(CheckCollisionPointRec(mouse, r1)){\
+      redraw = true;
+      state = GameState::DrawScreen;
+      return;
+    }
+
+    // Exit
+    if(CheckCollisionPointRec(mouse, r2)){
+      state = GameState::End;
+      return;
+    }
+  }
+
+
+
+}
 
 
 
@@ -465,6 +539,7 @@ int main(void){
 
   // Snake
   x_vec = {1, 3, 4, 1, 2, 4};
+        idx = 1;
   y_vec = {3, 3, 3, 4, 4, 4};
 
   // Ship
@@ -571,6 +646,7 @@ int main(void){
 
   SetTargetFPS(30);
 
+
   while(!WindowShouldClose()){
 
     BeginDrawing();
@@ -587,14 +663,26 @@ int main(void){
 
         Rectangle noRec{(float)no_button[0], (float)no_button[1], (float)no_button[2], (float)no_button[3]};
 
+
+        static bool fileopen = true;
+
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
           Vector2 mouse = GetMousePosition();
 
-
           // Wenn Yes geklickt -> laden
           if(CheckCollisionPointRec(mouse, yesRec)){
-            field = load_field_from_save(filename, block_count);
-            state = GameState::Running;
+
+            std::ifstream file(filename);
+
+            if(!file.is_open()){
+              fileopen = false;
+              std::cout << "Datei " << filename << " konnte nicht geoeffnet werden!" << std::endl;
+            }
+            else{
+              fileopen = true;
+              field = load_field_from_save(filename, block_count);
+              state = GameState::Running;
+            }
           }
 
           // Wenn No geklickt -> Feld zeichnen und neu starten
@@ -603,6 +691,10 @@ int main(void){
           
             state = GameState::DrawScreen;
           }
+        }
+
+        if(!fileopen){
+          DrawText(TextFormat("Datei %s konnte nicht geoeffnet werden!\n", filename.c_str()), GetScreenWidth() / 2 - (GetScreenWidth() / 2) / 2 + GetScreenWidth() / 2 / 10, GetScreenHeight() - 50, 20, RED);
         }
 
       }
@@ -620,17 +712,41 @@ int main(void){
             printField(field, block_size, block_count);
 
       }
-      else{
-
+      else if(state == GameState::Running){
+        std::cout << "Running" << std::endl;
         // Erst printen, dann verändern
         // Nach jedem Print soll eine andere Farbe der Bloecke angezeigt werden, wie ein Regenbogen
         printField(field, block_size, block_count, true);
 
         rules(field, block_count);
 
-        // Noch ein Ende Schriftzug, wenn sich nichts mehr im Feld tut, bzw. es leer ist
+        // Noch ein Ende Schriftzug, wenn sich nichts mehr im Feld tut, bzw. es leer IsMouseButtonDown
+        
+        //if(end(field)){
+        //  state = GameState::End;
+        //}
 
       }
+      else if(state == GameState::Settings){
+        // Settings
+      
+        printField(field, block_size, block_count, true);
+        
+        std::cout << "Settings" << std::endl;
+
+        printSettings();
+
+        if(IsKeyPressed(KEY_SPACE)){
+          // Return to Game
+          state = GameState::Running;
+        }
+
+      }
+      else if(state == GameState::End){
+        // End
+        break;
+      }
+
 
     EndDrawing();
 
